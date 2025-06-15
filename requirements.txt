@@ -15,3 +15,5 @@ chromadb==0.4.22  # Force downgrade to an older, compatible version
 # Other Dependencies
 pydantic==2.10.6
 tiktoken>=0.5.2,<0.6
+# vector-store backend
+faiss-cpu==1.7.4          # ← most recent wheel that has Py 3.11 binaries
