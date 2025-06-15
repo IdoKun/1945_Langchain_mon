@@ -4,9 +4,8 @@ import tempfile
 from langchain.chains import RetrievalQA
 from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter as RSplitter
 from langchain_community.vectorstores import Chroma
-import tempfile
 import sys
 # import pysqlite3
 
@@ -19,9 +18,8 @@ def file_checker(file_path):
         documents = loader.load()
     except FileNotFoundError:
         return "File not found."
-
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(documents)
+    splitter = RSplitter(chunk_size=1000, chunk_overlap=0)
+    texts = splitter.split_documents(documents)
 
     openai_api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
     if not openai_api_key:
@@ -29,7 +27,7 @@ def file_checker(file_path):
 
     embedder = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
-    persist_dir = tempfile.mkdtemp()
+    persist_dir = tempfile.mkdtemp() # 👈 Writable temp dir for Streamlit
 
     docsearch = Chroma.from_documents(
     documents=texts,
