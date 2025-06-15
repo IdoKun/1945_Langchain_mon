@@ -2,15 +2,10 @@ import streamlit as st
 import os
 import tempfile
 from langchain.chains import RetrievalQA
+from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter as RSplitter
-from langchain_community.vectorstores import Chroma
-import sys
-# import pysqlite3
-
-# sys.modules["sqlite3"] = pysqlite3
-
+from langchain.text_splitter import CharacterTextSplitter
 
 def file_checker(file_path):
     try:
@@ -18,7 +13,8 @@ def file_checker(file_path):
         documents = loader.load()
     except FileNotFoundError:
         return "File not found."
-    splitter = RSplitter(chunk_size=1000, chunk_overlap=0)
+
+    splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     texts = splitter.split_documents(documents)
 
     openai_api_key = st.secrets.get("OPENAI_API_KEY", os.getenv("OPENAI_API_KEY"))
@@ -27,13 +23,7 @@ def file_checker(file_path):
 
     embedder = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
-    persist_dir = tempfile.mkdtemp() # 👈 Writable temp dir for Streamlit
-
-    docsearch = Chroma.from_documents(
-    documents=texts,
-    embedding=embedder,
-    persist_directory=persist_dir
-)
+    docsearch = FAISS.from_documents(texts, embedder)
 
     qa = RetrievalQA.from_chain_type(
         llm=ChatOpenAI(model_name="gpt-4.1-nano-2025-04-14", openai_api_key=openai_api_key),
