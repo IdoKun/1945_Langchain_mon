@@ -6,7 +6,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-
+import tempfile
 import sys
 # import pysqlite3
 
@@ -28,7 +28,14 @@ def file_checker(file_path):
         return "OpenAI API key is missing. Please configure it in Streamlit secrets."
 
     embedder = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    docsearch = Chroma.from_documents(texts, embedder)
+
+    persist_dir = tempfile.mkdtemp()
+
+    docsearch = Chroma.from_documents(
+    documents=texts,
+    embedding=embedder,
+    persist_directory=persist_dir
+)
 
     qa = RetrievalQA.from_chain_type(
         llm=ChatOpenAI(model_name="gpt-4.1-nano-2025-04-14", openai_api_key=openai_api_key),
